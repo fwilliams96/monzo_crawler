@@ -1,0 +1,47 @@
+services:
+  crawler-db:
+    image: postgres:16
+    container_name: crawler-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-crawler}
+      POSTGRES_USER: ${DB_USER:-crawler}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-crawler}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-crawler} -d ${DB_NAME:-crawler}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - crawler
+
+  crawler:
+    build:
+      context: .
+    container_name: crawler
+    restart: unless-stopped
+    depends_on:
+      crawler-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: crawler-db
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-crawler}
+      DB_USER: ${DB_USER:-crawler}
+      DB_PASSWORD: ${DB_PASSWORD:-crawler}
+    ports:
+      - "${PORT:-8080}:8080"
+    networks:
+      - crawler
+
+networks:
+  crawler:
+    driver: bridge
+
+volumes:
+  pgdata:

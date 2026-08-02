@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crawler</title>
+    <meta name="description" content="Crawler tool for Monzo interview" />
+    <style>
+
+        body {
+            font-family: sans-serif;
+            background: #98dce8;
+        }
+
+        .page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .content {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 1px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        h1 {
+            font-size: 48px;
+        }
+
+        input, button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #a1b8b1;
+        }
+
+        input#url {
+            width: 300px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h1>Crawler - Test</h1>
+        <div class="content">
+            <form id="crawl-form" class="form">
+                <div class="form-group">
+                    <label for="url">Initial url</label>
+                    <input id="url" type="url"  name="url" placeholder="https://example.com" required />
+                </div>
+                <div class="form-group">
+                    <label for="depth">Max depth</label>
+                    <input id="depth" type="number"  name="depth" placeholder="10" />
+                </div>
+
+                <button id="submit" type="submit">Crawl</button>
+            </form>
+
+            <p id="status"></p>
+            <pre id="result"></pre>
+        </div>
+
+    </div>
+
+    <script>
+        const form = document.getElementById("crawl-form");
+        const statusElement = document.getElementById("status");
+        const resultElement = document.getElementById("result");
+        const submitButton = document.getElementById("submit");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const url = document.getElementById("url").value;
+            const depth = document.getElementById("depth").value;
+            const maxDepth = depth ? Number(depth) : null;
+
+            statusElement.textContent = "Starting crawl...";
+            resultElement.textContent = "";
+
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch("/api/crawls", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({initialUrl: url, maxDepth: maxDepth})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`POST failed: ${response.status}`);
+                }
+
+                const crawl = await response.json();
+
+                statusElement.textContent = "Crawl in progress...";
+
+                const result = await pollCrawlResult(crawl.id);
+
+                statusElement.textContent = "Crawl completed";
+                resultElement.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                console.error(error);
+                statusElement.textContent = `Error: ${error.message}`;
+            }
+            submitButton.disabled = false;
+
+        });
+
+        async function pollCrawlResult(crawlId) {
+            const pollingIntervalMs = 5000;
+            const maxAttempts = 1000;
+
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                const response = await fetch(`/api/crawls/${crawlId}`);
+
+                if (!response.ok) {
+                    throw new Error(`Polling failed: ${response.status}`);
+                }
+
+                const crawl = await response.json();
+
+                if (crawl.status === "FINISHED") {
+                    return crawl['result'];
+                }
+
+                if (crawl.status === "FAILED") {
+                    throw new Error(crawl.error ?? "Crawl failed");
+                }
+
+                await sleep(pollingIntervalMs);
+            }
+
+            throw new Error("Polling timed out");
+        }
+
+        function sleep(milliseconds) {
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+        }
+
+    </script>
+
+</body>
+</html>
