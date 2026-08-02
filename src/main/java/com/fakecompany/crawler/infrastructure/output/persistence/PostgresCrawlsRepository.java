@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -67,6 +68,7 @@ public class PostgresCrawlsRepository implements CrawlsRepository {
         if (StringUtils.isNotBlank(entity.getResult())) {
             try {
                 crawlResultPages = objectMapper.readValue(entity.getResult(), new TypeReference<>() {});
+                crawlResultPages.sort(Comparator.comparingInt(CrawlResultPage::depth));
             } catch (JsonProcessingException e) {
                 throw new InternalServerError("Error converting string to result pages", e);
             }

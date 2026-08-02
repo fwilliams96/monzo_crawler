@@ -56,6 +56,32 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/CrawlJobSimple'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/crawls/{jobId}/result:
+    get:
+      tags: [ Crawls ]
+      security: [ ]
+      operationId: getCrawlJobResult
+      summary: Get crawl job result
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Crawl job
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/CrawlJob'
         '404':
           description: Not found
@@ -79,6 +105,19 @@ components:
         id:
           type: string
           format: uuid
+    CrawlJobSimple:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        initialUrl:
+          type: string
+        maxDepth:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/CrawlJobStatus'
     CrawlJob:
       type: object
       properties:
@@ -91,21 +130,23 @@ components:
           type: integer
           format: int32
         status:
-          type: string
-          enum: [
-            PENDING,
-            FINISHED,
-            FAILED
-          ]
-          x-enum-varnames: [
-            PENDING,
-            FINISHED,
-            FAILED
-          ]
+          $ref: '#/components/schemas/CrawlJobStatus'
         result:
           type: array
           items:
             $ref: '#/components/schemas/CrawlResultPage'
+    CrawlJobStatus:
+      type: string
+      enum: [
+        PENDING,
+        FINISHED,
+        FAILED
+      ]
+      x-enum-varnames: [
+        PENDING,
+        FINISHED,
+        FAILED
+      ]
     CrawlResultPage:
       type: object
       properties:

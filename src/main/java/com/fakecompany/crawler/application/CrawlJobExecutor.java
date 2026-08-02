@@ -77,7 +77,7 @@ public class CrawlJobExecutor {
                     continue;
                 }
 
-                log.info("Number of links found for node(link={}, depth={}) : {}", crawlTaskResult.task().url(), crawlTaskResult.task().depth(), crawlTaskResult.result().links());
+                log.debug("Number of links found for node(link={}, depth={}) : {}", crawlTaskResult.task().url(), crawlTaskResult.task().depth(), crawlTaskResult.result().links());
 
                 for (URI link: crawlTaskResult.result().links()) {
                     if (!link.toString().startsWith(crawlJob.getInitialUrl().toString())) {
@@ -112,7 +112,7 @@ public class CrawlJobExecutor {
             currentLevel = nextLevel;
         }
         List<CrawlResultPage> pages = mapCrawlTaskNodesToResultPages(visited);
-        log.info("Crawling finished, pages found: {}", pages);
+        log.info("Crawling finished, number of different pages found: {}", pages.size());
         crawlJob.finishCrawl(pages);
         repository.update(crawlJob);
     }

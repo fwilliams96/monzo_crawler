@@ -35,7 +35,23 @@ public class CrawlsController implements CrawlsApi {
     }
 
     @Override
-    public ResponseEntity<CrawlJobDto> getCrawlJob(UUID jobId) {
+    public ResponseEntity<CrawlJobSimpleDto> getCrawlJob(UUID jobId) {
+        Optional<CrawlJob> byId = crawlJobFinder.findById(jobId);
+        return byId.map(crawlJob -> ResponseEntity.ok(mapToSimpleDto(crawlJob)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private CrawlJobSimpleDto mapToSimpleDto(CrawlJob crawlJob) {
+        CrawlJobSimpleDto dto = new CrawlJobSimpleDto();
+        dto.setId(crawlJob.getId());
+        dto.setStatus(CrawlJobStatusDto.fromValue(crawlJob.getStatus().name()));
+        dto.setInitialUrl(crawlJob.getInitialUrl().toString());
+        dto.setMaxDepth(crawlJob.getMaxDepth());
+        return dto;
+    }
+
+    @Override
+    public ResponseEntity<CrawlJobDto> getCrawlJobResult(UUID jobId) {
         Optional<CrawlJob> byId = crawlJobFinder.findById(jobId);
         return byId.map(crawlJob -> ResponseEntity.ok(mapToDto(crawlJob)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -44,7 +60,7 @@ public class CrawlsController implements CrawlsApi {
     private CrawlJobDto mapToDto(CrawlJob crawlJob) {
         CrawlJobDto dto = new CrawlJobDto();
         dto.setId(crawlJob.getId());
-        dto.setStatus(CrawlJobDto.StatusEnum.fromValue(crawlJob.getStatus().name()));
+        dto.setStatus(CrawlJobStatusDto.fromValue(crawlJob.getStatus().name()));
         dto.setInitialUrl(crawlJob.getInitialUrl().toString());
         dto.setMaxDepth(crawlJob.getMaxDepth());
         dto.setResult(mapToResult(crawlJob.getPages()));

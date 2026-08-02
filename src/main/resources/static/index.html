@@ -22,6 +22,7 @@
             margin-top: 2rem;
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         form {
@@ -51,6 +52,24 @@
             width: 300px;
         }
 
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        #download-result {
+            display: none;
+            margin-bottom: 1rem;
+        }
+
+        #result {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
     </style>
 </head>
 <body>
@@ -71,6 +90,9 @@
             </form>
 
             <p id="status"></p>
+
+            <button id="download-result" type="button"> Download JSON </button>
+
             <pre id="result"></pre>
         </div>
 
@@ -81,6 +103,7 @@
         const statusElement = document.getElementById("status");
         const resultElement = document.getElementById("result");
         const submitButton = document.getElementById("submit");
+        const downloadButton = document.getElementById("download-result");
 
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -91,7 +114,7 @@
 
             statusElement.textContent = "Starting crawl...";
             resultElement.textContent = "";
-
+            downloadButton.style.display = "none";
             submitButton.disabled = true;
 
             try {
@@ -115,12 +138,29 @@
 
                 statusElement.textContent = "Crawl completed";
                 resultElement.textContent = JSON.stringify(result, null, 2);
+                downloadButton.style.display = "flex";
             } catch (error) {
                 console.error(error);
                 statusElement.textContent = `Error: ${error.message}`;
+            } finally {
+                submitButton.disabled = false;
             }
-            submitButton.disabled = false;
 
+        });
+
+        downloadButton.addEventListener("click", () => {
+            if (!resultElement.textContent) {
+                return;
+            }
+            const blob = new Blob( [resultElement.textContent], { type: "application/json;charset=utf-8" } );
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = "crawl-result.json";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(downloadUrl);
         });
 
         async function pollCrawlResult(crawlId) {
@@ -137,7 +177,14 @@
                 const crawl = await response.json();
 
                 if (crawl.status === "FINISHED") {
-                    return crawl['result'];
+                    const responseWithResult = await fetch(`/api/crawls/${crawlId}/result`);
+                    if (!responseWithResult.ok) {
+                        throw new Error(`Poll results failed: ${responseWithResult.status}`);
+                    }
+
+                    const crawlWithResult = await responseWithResult.json();
+
+                    return crawlWithResult['result'];
                 }
 
                 if (crawl.status === "FAILED") {
