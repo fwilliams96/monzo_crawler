@@ -28,8 +28,8 @@ public class CrawlJobExecutor {
     private final PageHtmlGetter pageHtmlGetter;
     private final @Qualifier("pageExecutor") Executor pageExecutor;
 
-    public record CrawlTaskNode(URI url, int depth, Set<URI> incomingLinks, Set<URI> links) {}
-    public record PageResult(List<URI> links) {}
+    private record CrawlTaskNode(URI url, int depth, Set<URI> incomingLinks, Set<URI> links) {}
+    private record PageResult(List<URI> links) {}
     private record CrawlTaskResult(CrawlTaskNode task, PageResult result) {}
 
     @Async("jobExecutor")

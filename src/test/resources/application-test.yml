@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+async:
+  config:
+    page-executor:
+      core-pool-size: 4
+      max-pool-size: 4
+      queue-capacity: 500
+      thread-name: CrawlerPageTestAsync-

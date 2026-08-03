@@ -27,9 +27,9 @@ async:
       corePoolSize: 2
       maxPoolSize: 2
       queueCapacity: 500
-      threadName: 'CrawlerJobAsync'
+      threadName: 'CrawlerJobAsync-'
     pageExecutor:
       corePoolSize: 8
       maxPoolSize: 8
       queueCapacity: 500
-      threadName: 'CrawlerPageAsync'
+      threadName: 'CrawlerPageAsync-'

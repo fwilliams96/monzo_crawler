@@ -6,7 +6,6 @@ import com.fakecompany.crawler.domain.CrawlsRepository;
 import com.fakecompany.crawler.domain.NewCrawlJob;
 import com.fakecompany.crawler.shared.BadRequestError;
 import com.fakecompany.crawler.shared.HttpUtils;
-import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
